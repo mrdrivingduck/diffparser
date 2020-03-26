@@ -1,14 +1,16 @@
 # diffparser
 
+⛏️ Parse unified diffs with Java.
+
+Created by : [@thombergs](https://github.com/thombergs)
+
 Modified by : Mr Dk.
 
-2020 / 03 / 27 01:39
+2020 / 03 / 27 02:02
 
 Ningbo, Zhejiang, China
 
 ---
-
-Parse unified diffs with Java.
 
 ## Code example
 
