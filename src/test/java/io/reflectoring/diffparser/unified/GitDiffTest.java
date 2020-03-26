@@ -50,4 +50,32 @@ public class GitDiffTest {
         assertEquals(Line.LineType.FROM, lines.get(3).getLineType());
         assertEquals(Line.LineType.TO, lines.get(4).getLineType());
     }
+
+    @Test
+    public void testBlank() {
+        // given
+        DiffParser parser = new UnifiedDiffParser();
+        InputStream in = getClass().getResourceAsStream("buggygit.diff");
+
+        // when
+        List<Diff> diffs = parser.parse(in);
+
+        // then
+        assertNotNull(diffs);
+        assertEquals(2, diffs.size());
+
+        Diff diff1 = diffs.get(0);
+        assertEquals("a/source/org/jfree/data/DefaultKeyedValues.java", diff1.getFromFileName());
+        assertEquals("b/source/org/jfree/data/DefaultKeyedValues.java", diff1.getToFileName());
+        assertEquals(2, diff1.getHunks().size());
+
+        List<String> headerLines = diff1.getHeaderLines();
+        assertEquals(2, headerLines.size());
+
+        Hunk hunk1 = diff1.getHunks().get(0);
+        assertEquals(315, hunk1.getFromFileRange().getLineStart());
+        assertEquals(7, hunk1.getFromFileRange().getLineCount());
+        assertEquals(315, hunk1.getToFileRange().getLineStart());
+        assertEquals(9, hunk1.getToFileRange().getLineCount());
+    }
 }

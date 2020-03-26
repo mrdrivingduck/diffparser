@@ -17,9 +17,6 @@ package io.reflectoring.diffparser.unified;
 
 import static io.reflectoring.diffparser.api.UnifiedDiffParser.LINE_RANGE_PATTERN;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * State machine for a parser parsing a unified diff.
  *
@@ -62,7 +59,8 @@ public enum ParserState {
     },
 
     /**
-     * The parser is in this state if it is currently parsing the line containing the "from" file.
+     * The parser is in this state if it is currently parsing the line containing
+     * the "from" file.
      * <p/>
      * Example line:<br/>
      * {@code --- /path/to/file.txt}
@@ -75,13 +73,15 @@ public enum ParserState {
                 logTransition(line, FROM_FILE, TO_FILE);
                 return TO_FILE;
             } else {
-                throw new IllegalStateException("A FROM_FILE line ('---') must be directly followed by a TO_FILE line ('+++')!");
+                throw new IllegalStateException(
+                        "A FROM_FILE line ('---') must be directly followed by a TO_FILE line ('+++')!");
             }
         }
     },
 
     /**
-     * The parser is in this state if it is currently parsing the line containing the "to" file.
+     * The parser is in this state if it is currently parsing the line containing
+     * the "to" file.
      * <p/>
      * Example line:<br/>
      * {@code +++ /path/to/file.txt}
@@ -94,13 +94,15 @@ public enum ParserState {
                 logTransition(line, TO_FILE, HUNK_START);
                 return HUNK_START;
             } else {
-                throw new IllegalStateException("A TO_FILE line ('+++') must be directly followed by a HUNK_START line ('@@')!");
+                throw new IllegalStateException(
+                        "A TO_FILE line ('+++') must be directly followed by a HUNK_START line ('@@')!");
             }
         }
     },
 
     /**
-     * The parser is in this state if it is currently parsing a line containing the header of a hunk.
+     * The parser is in this state if it is currently parsing a line containing the
+     * header of a hunk.
      * <p/>
      * Example line:<br/>
      * {@code @@ -1,5 +2,6 @@}
@@ -123,8 +125,8 @@ public enum ParserState {
     },
 
     /**
-     * The parser is in this state if it is currently parsing a line containing a line that is in the first file,
-     * but not the second (a "from" line).
+     * The parser is in this state if it is currently parsing a line containing a
+     * line that is in the first file, but not the second (a "from" line).
      * <p/>
      * Example line:<br/>
      * {@code - only the dash at the start is important}
@@ -153,8 +155,8 @@ public enum ParserState {
     },
 
     /**
-     * The parser is in this state if it is currently parsing a line containing a line that is in the second file,
-     * but not the first (a "to" line).
+     * The parser is in this state if it is currently parsing a line containing a
+     * line that is in the second file, but not the first (a "to" line).
      * <p/>
      * Example line:<br/>
      * {@code + only the plus at the start is important}
@@ -183,8 +185,8 @@ public enum ParserState {
     },
 
     /**
-     * The parser is in this state if it is currently parsing a line that is contained in both files (a "neutral" line). This line can
-     * contain any string.
+     * The parser is in this state if it is currently parsing a line that is
+     * contained in both files (a "neutral" line). This line can contain any string.
      */
     NEUTRAL_LINE {
         @Override
@@ -210,8 +212,8 @@ public enum ParserState {
     },
 
     /**
-     * The parser is in this state if it is currently parsing a line that is the delimiter between two Diffs. This line is always a new
-     * line.
+     * The parser is in this state if it is currently parsing a line that is the
+     * delimiter between two Diffs. This line is always a new line.
      */
     END {
         @Override
@@ -222,11 +224,10 @@ public enum ParserState {
         }
     };
 
-    protected static Logger logger = LoggerFactory.getLogger(ParserState.class);
-
     /**
-     * Returns the next state of the state machine depending on the current state and the content of a window of lines around the line
-     * that is currently being parsed.
+     * Returns the next state of the state machine depending on the current state
+     * and the content of a window of lines around the line that is currently being
+     * parsed.
      *
      * @param window the window around the line currently being parsed.
      * @return the next state of the state machine.
@@ -234,7 +235,7 @@ public enum ParserState {
     public abstract ParserState nextState(ParseWindow window);
 
     protected void logTransition(String currentLine, ParserState fromState, ParserState toState) {
-        logger.debug(String.format("%12s -> %12s: %s", fromState, toState, currentLine));
+        // logger.debug(String.format("%12s -> %12s: %s", fromState, toState, currentLine));
     }
 
     protected boolean matchesFromFilePattern(String line) {
@@ -259,18 +260,26 @@ public enum ParserState {
 
     protected boolean matchesEndPattern(String line, ParseWindow window) {
         if ("".equals(line.trim())) {
-            // We have a newline which might be the delimiter between two diffs. It may just be an empty line in the current diff or it
+            // We have a newline which might be the delimiter between two diffs. It may just
+            // be an empty line in the current diff or it
             // may be the delimiter to the next diff. This has to be disambiguated...
             int i = 1;
             String futureLine;
             while ((futureLine = window.getFutureLine(i)) != null) {
                 if (matchesFromFilePattern(futureLine)) {
-                    // We found the start of a new diff without another newline in between. That makes the current line the delimiter
+                    // We found the start of a new diff without another newline in between. That
+                    // makes the current line the delimiter
                     // between this diff and the next.
                     return true;
                 } else if ("".equals(futureLine.trim())) {
-                    // We found another newline after the current newline without a start of a new diff in between. That makes the
+                    // We found another newline after the current newline without a start of a new
+                    // diff in between. That makes the
                     // current line just a newline within the current diff.
+                    return false;
+                } else if (matchesHunkStartPattern(futureLine)) {
+                    /**
+                     * @Mr Dk. modified here.
+                     */
                     return false;
                 } else {
                     i++;
@@ -282,14 +291,13 @@ public enum ParserState {
             // some diff tools like "svn diff" do not put an empty line between two diffs
             // we add that empty line and call the method again
             String nextFromFileLine = window.getFutureLine(3);
-            if(nextFromFileLine != null && matchesFromFilePattern(nextFromFileLine)){
+            if (nextFromFileLine != null && matchesFromFilePattern(nextFromFileLine)) {
                 window.addLine(1, "");
                 return matchesEndPattern(line, window);
-            }else{
+            } else {
                 return false;
             }
         }
     }
-
 
 }
