@@ -11,15 +11,18 @@ Ningbo, Zhejiang, China
 Parse unified diffs with Java.
 
 ## Code example
-```
+
+```java
 DiffParser parser = new UnifiedDiffParser();
 InputStream in = new FileInputStream("/path/to/file.diff");
 List<Diff> diff = parser.parse(in);
 ```
 
 ## What Diff formats can be parsed?
+
 Currently, the only implementation of the DiffParser interface is UnifiedDiffParser, which supports parsing of diffs like the following:
-```
+
+```diff
 Modified: trunk/test1.txt
 ===================================================================
 --- /trunk/test1.txt	2013-10-23 19:41:56 UTC (rev 46)
@@ -43,7 +46,7 @@ of class Diff.
 
 ## Latest Stable Release
 
-### Maven
+In [release](https://github.com/mrdrivingduck/diffparser/releases).
 
 ---
 
